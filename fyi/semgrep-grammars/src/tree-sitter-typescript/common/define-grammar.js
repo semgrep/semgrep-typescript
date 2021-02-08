@@ -2,9 +2,13 @@ const PREC = {
   ACCESSIBILITY: 1,
   DEFINITION: 1,
   DECLARATION: 1,
-  TUPLE_TYPE: 1,
-  INTERSECTION: 2,
-  UNION: 2,
+  AS_EXPRESSION: 1,
+  // INTERSECTION: 2,
+  // UNION: 2,
+  FUNCTION_TYPE: 1,
+  CONDITIONAL_TYPE: 2,
+  INTERSECTION: 3,
+  UNION: 3,
   PLUS: 4,
   REL: 5,
   TIMES: 6,
@@ -15,11 +19,12 @@ const PREC = {
   NON_NULL: 10,
   CALL: 11,
   NEW: 12,
+  FLOW_MAYBE_TYPE: 12,
   ARRAY_TYPE: 13,
   MEMBER: 14,
-  AS_EXPRESSION: 15,
   TYPE_ASSERTION: 16,
-  TYPE_REFERENCE: 16
+  TYPE_REFERENCE: 16,
+  CONSTRUCTOR_TYPE: 17
 };
 
 module.exports = function defineGrammar(dialect) {
@@ -33,6 +38,7 @@ module.exports = function defineGrammar(dialect) {
       // slightly different when parsing types. Any binary-only operator would
       // work.
       '||',
+      $._function_signature_automatic_semicolon,
     ]),
 
     conflicts: ($, previous) => previous.concat([
@@ -44,6 +50,7 @@ module.exports = function defineGrammar(dialect) {
       [$.nested_identifier, $.member_expression, $.nested_type_identifier],
 
       [$.generic_type, $._primary_type],
+      [$._expression, $._primary_type, $.generic_type],
       [$.member_expression, $.nested_identifier],
 
       [$._parameter_name, $.predefined_type],
@@ -66,9 +73,14 @@ module.exports = function defineGrammar(dialect) {
       [$._expression, $._primary_type],
       [$._expression, $.generic_type],
       [$._expression, $.predefined_type],
+      [$._expression, $._rest_identifier],
+      [$._expression, $._tuple_type_identifier],
+      [$._expression, $.optional_identifier],
 
       [$.object, $.object_type],
       [$.object, $._property_name],
+
+      [$.array, $._tuple_type_body]
     ]),
 
     inline: ($, previous) => previous
@@ -113,6 +125,10 @@ module.exports = function defineGrammar(dialect) {
         field('type_arguments', optional($.type_arguments)),
         field('arguments', optional($.arguments))
       )),
+
+      _augmented_assignment_lhs: ($, previous) => choice(previous, $.non_null_expression),
+
+      _lhs_expression: ($, previous) => choice(previous, $.non_null_expression),
 
       // If the dialect is regular typescript, we exclude JSX expressions and
       // include type assertions. If the dialect is TSX, we do the opposite.
@@ -188,7 +204,8 @@ module.exports = function defineGrammar(dialect) {
       export_statement: ($, previous) => prec(PREC.DECLARATION, choice(
         previous,
         seq('export', '=', $.identifier, $._semicolon),
-        seq('export', 'as', 'namespace', $.identifier, $._semicolon)
+        seq('export', 'as', 'namespace', $.identifier, $._semicolon),
+        seq('export', optional("default"), $.function_signature)
       )),
 
       non_null_expression: $ => prec.left(PREC.NON_NULL, seq(
@@ -251,7 +268,7 @@ module.exports = function defineGrammar(dialect) {
         'function',
         field('name', $.identifier),
         $._call_signature,
-        $._semicolon
+        choice($._semicolon, $._function_signature_automatic_semicolon),
       ),
 
       class_body: $ => seq(
@@ -339,6 +356,7 @@ module.exports = function defineGrammar(dialect) {
       ),
 
       abstract_class_declaration: $ => seq(
+        repeat(field('decorator', $.decorator)),
         'abstract',
         'class',
         field('name', $._type_identifier),
@@ -471,20 +489,31 @@ module.exports = function defineGrammar(dialect) {
         )
       ),
 
-      rest_parameter: $ => seq(
+      _rest_identifier: $ => seq(
         '...',
         $.identifier,
+      ),
+
+      rest_identifier: $ => $._rest_identifier,
+
+      rest_parameter: $ => seq(
+        $._rest_identifier,
         optional($.type_annotation)
       ),
 
+      omitting_type_annotation: $ => seq('-?:', $._type),
+      opting_type_annotation: $ => seq('?:', $._type),
       type_annotation: $ => seq(':', $._type),
 
       asserts: $ => seq(
         ':',
         'asserts',
-        choice(
-          $.identifier,
-          seq($.identifier, 'is', $._type)
+        choice($.identifier, $.this),
+        optional(
+          seq(
+            'is',
+            $._type
+          )
         )
       ),
 
@@ -493,16 +522,32 @@ module.exports = function defineGrammar(dialect) {
         $.union_type,
         $.intersection_type,
         $.function_type,
-        $.constructor_type
+        $.constructor_type,
+        $.infer_type
       ),
 
-      constructor_type: $ => seq(
+      optional_identifier: $ => seq($.identifier, '?'),
+
+      _tuple_type_identifier: $ => choice(
+        $.identifier,
+        $.optional_identifier,
+        $.rest_identifier
+      ),
+
+      labeled_tuple_type_member: $ => seq($._tuple_type_identifier, $.type_annotation),
+
+      _tuple_type_member: $ => choice(
+        $._tuple_type_identifier,
+        $.labeled_tuple_type_member,
+      ),
+
+      constructor_type: $ => prec.left(PREC.CONSTRUCTOR_TYPE, seq(
         'new',
         optional($.type_parameters),
         $.formal_parameters,
         '=>',
         $._type
-      ),
+      )),
 
       _primary_type: $ => choice(
         $.parenthesized_type,
@@ -510,7 +555,6 @@ module.exports = function defineGrammar(dialect) {
         $._type_identifier,
         $.nested_type_identifier,
         $.generic_type,
-        $.type_predicate,
         $.object_type,
         $.array_type,
         $.tuple_type,
@@ -520,8 +564,21 @@ module.exports = function defineGrammar(dialect) {
         $.this,
         $.existential_type,
         $.literal_type,
-        $.lookup_type
+        $.lookup_type,
+        $.conditional_type,
       ),
+
+      infer_type: $ => seq("infer", $._type_identifier),
+
+      conditional_type: $ => prec.left(PREC.CONDITIONAL_TYPE, seq(
+        field('left', $._type),
+        'extends',
+        field('right', $._type),
+        '?',
+        field('consequence', $._type),
+        ':',
+        field('alternative', $._type)
+      )),
 
       generic_type: $ => seq(
         choice(
@@ -532,19 +589,23 @@ module.exports = function defineGrammar(dialect) {
       ),
 
       type_predicate: $ => seq(
-        $.identifier,
+        choice($.identifier, $.this),
         'is',
         $._type
       ),
 
+      type_predicate_annotation: $ => seq(
+        seq(':', $.type_predicate)
+      ),
+
       type_query: $ => prec(PREC.TYPEOF, seq(
         'typeof',
-        choice($.identifier, $.nested_identifier)
+        choice($.identifier, $.nested_identifier, $.generic_type)
       )),
 
       index_type_query: $ => seq(
         'keyof',
-        prec.left(PREC.DECLARATION, choice($.generic_type, $._type_identifier, $.nested_type_identifier))
+        prec.left(PREC.DECLARATION, choice($.generic_type, $._type_identifier, $.nested_type_identifier, $.type_query))
       ),
 
       lookup_type: $ => prec(PREC.ARRAY_TYPE, seq(
@@ -575,7 +636,7 @@ module.exports = function defineGrammar(dialect) {
 
       existential_type: $ => '*',
 
-      flow_maybe_type: $ => prec.right(seq( '?', $._primary_type)),
+      flow_maybe_type: $ => prec.right(PREC.FLOW_MAYBE_TYPE, seq( '?', $._primary_type)),
 
       parenthesized_type: $ => seq(
         '(', $._type, ')'
@@ -629,7 +690,7 @@ module.exports = function defineGrammar(dialect) {
         field('type_parameters', optional($.type_parameters)),
         field('parameters', $.formal_parameters),
         field('return_type', optional(
-          choice($.type_annotation, $.asserts)
+          choice($.type_annotation, $.asserts, $.type_predicate_annotation)
         ))
       ),
 
@@ -661,7 +722,12 @@ module.exports = function defineGrammar(dialect) {
       ),
 
       index_signature: $ => seq(
-        optional($.readonly),
+        optional(
+          seq(
+            field("sign", optional("-")),
+            $.readonly
+          )
+        ),
         '[',
         choice(
           seq(
@@ -670,12 +736,16 @@ module.exports = function defineGrammar(dialect) {
               alias($._reserved_identifier, $.identifier)
             ),
             ':',
-            $.predefined_type,
+            $._type,
           ),
           $.mapped_type_clause
         ),
         ']',
-        $.type_annotation
+        choice(
+          $.type_annotation,
+          $.omitting_type_annotation,
+          $.opting_type_annotation
+        )
       ),
 
       array_type: $ => prec(PREC.ARRAY_TYPE, choice(
@@ -683,9 +753,13 @@ module.exports = function defineGrammar(dialect) {
         prec(PREC.ARRAY_TYPE+1, seq($._primary_type, '[', ']'))
       )),
 
+      _tuple_type_body: $ => seq(
+        "[", optional(commaSep1($._tuple_type_member)), "]"
+      ),
+
       tuple_type: $ => choice(
-        seq($.readonly, '[', commaSep1($._type), ']'),
-        prec(PREC.TUPLE_TYPE, seq('[', commaSep1($._type), ']'))
+        prec.left(PREC.ARRAY_TYPE + 1, $._tuple_type_body),
+        prec.left(PREC.ARRAY_TYPE + 2, seq($.readonly, $._tuple_type_body)),
       ),
 
       union_type: $ => prec.left(PREC.UNION, seq(
@@ -696,12 +770,12 @@ module.exports = function defineGrammar(dialect) {
         optional($._type), '&', $._type
       )),
 
-      function_type: $ => seq(
+      function_type: $ => prec.left(PREC.FUNCTION_TYPE, seq(
         optional($.type_parameters),
         $.formal_parameters,
         '=>',
         $._type
-      ),
+      )),
 
       _type_identifier: $ => alias($.identifier, $.type_identifier),
 
