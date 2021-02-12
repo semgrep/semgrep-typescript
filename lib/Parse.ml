@@ -354,8 +354,8 @@ let children_regexps : (string * Run.exp option) list = [
   Some (
     Alt [|
       Token (Name "identifier");
-      Token (Name "optional_identifier");
       Token (Name "rest_identifier_");
+      Token (Name "optional_identifier");
     |];
   );
   "import_statement",
@@ -2349,6 +2349,13 @@ let children_regexps : (string * Run.exp option) list = [
       );
     ];
   );
+  "optional_type",
+  Some (
+    Seq [
+      Token (Name "type");
+      Token (Literal "?");
+    ];
+  );
   "pair",
   Some (
     Seq [
@@ -2563,6 +2570,13 @@ let children_regexps : (string * Run.exp option) list = [
       Opt (
         Token (Name "type_annotation");
       );
+    ];
+  );
+  "rest_type",
+  Some (
+    Seq [
+      Token (Literal "...");
+      Token (Name "type");
     ];
   );
   "return_statement",
@@ -2877,8 +2891,10 @@ let children_regexps : (string * Run.exp option) list = [
   "tuple_type_member",
   Some (
     Alt [|
-      Token (Name "tuple_type_identifier");
       Token (Name "labeled_tuple_type_member");
+      Token (Name "optional_type");
+      Token (Name "rest_type");
+      Token (Name "type");
     |];
   );
   "type",
@@ -2994,6 +3010,7 @@ let children_regexps : (string * Run.exp option) list = [
         Token (Name "identifier");
         Token (Name "nested_identifier");
         Token (Name "generic_type");
+        Token (Name "call_expression");
       |];
     ];
   );
@@ -3983,12 +4000,12 @@ let trans_tuple_type_identifier ((kind, body) : mt) : CST.tuple_type_identifier 
             trans_identifier (Run.matcher_token v)
           )
       | Alt (1, v) ->
-          `Opt_id (
-            trans_optional_identifier (Run.matcher_token v)
-          )
-      | Alt (2, v) ->
           `Rest_id_ (
             trans_rest_identifier_ (Run.matcher_token v)
+          )
+      | Alt (2, v) ->
+          `Opt_id (
+            trans_optional_identifier (Run.matcher_token v)
           )
       | _ -> assert false
       )
@@ -9325,6 +9342,19 @@ and trans_optional_parameter ((kind, body) : mt) : CST.optional_parameter =
       )
   | Leaf _ -> assert false
 
+and trans_optional_type ((kind, body) : mt) : CST.optional_type =
+  match body with
+  | Children v ->
+      (match v with
+      | Seq [v0; v1] ->
+          (
+            trans_type_ (Run.matcher_token v0),
+            Run.trans_token (Run.matcher_token v1)
+          )
+      | _ -> assert false
+      )
+  | Leaf _ -> assert false
+
 and trans_pair ((kind, body) : mt) : CST.pair =
   match body with
   | Children v ->
@@ -9858,6 +9888,19 @@ and trans_rest_parameter ((kind, body) : mt) : CST.rest_parameter =
             Run.opt
               (fun v -> trans_type_annotation (Run.matcher_token v))
               v1
+          )
+      | _ -> assert false
+      )
+  | Leaf _ -> assert false
+
+and trans_rest_type ((kind, body) : mt) : CST.rest_type =
+  match body with
+  | Children v ->
+      (match v with
+      | Seq [v0; v1] ->
+          (
+            Run.trans_token (Run.matcher_token v0),
+            trans_type_ (Run.matcher_token v1)
           )
       | _ -> assert false
       )
@@ -10711,12 +10754,20 @@ and trans_tuple_type_member ((kind, body) : mt) : CST.tuple_type_member =
   | Children v ->
       (match v with
       | Alt (0, v) ->
-          `Tuple_type_id (
-            trans_tuple_type_identifier (Run.matcher_token v)
-          )
-      | Alt (1, v) ->
           `Labe_tuple_type_member (
             trans_labeled_tuple_type_member (Run.matcher_token v)
+          )
+      | Alt (1, v) ->
+          `Opt_type (
+            trans_optional_type (Run.matcher_token v)
+          )
+      | Alt (2, v) ->
+          `Rest_type (
+            trans_rest_type (Run.matcher_token v)
+          )
+      | Alt (3, v) ->
+          `Type (
+            trans_type_ (Run.matcher_token v)
           )
       | _ -> assert false
       )
@@ -10948,6 +10999,10 @@ and trans_type_query ((kind, body) : mt) : CST.type_query =
             | Alt (2, v) ->
                 `Gene_type (
                   trans_generic_type (Run.matcher_token v)
+                )
+            | Alt (3, v) ->
+                `Call_exp (
+                  trans_call_expression (Run.matcher_token v)
                 )
             | _ -> assert false
             )

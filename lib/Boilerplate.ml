@@ -348,11 +348,11 @@ let map_jsx_attribute_name (env : env) (x : CST.jsx_attribute_name) =
 let map_tuple_type_identifier (env : env) (x : CST.tuple_type_identifier) =
   (match x with
   | `Id tok -> token env tok (* identifier *)
+  | `Rest_id_ x -> map_rest_identifier_ env x
   | `Opt_id (v1, v2) ->
       let v1 = token env v1 (* identifier *) in
       let v2 = token env v2 (* "?" *) in
       todo env (v1, v2)
-  | `Rest_id_ x -> map_rest_identifier_ env x
   )
 
 let map_import_clause (env : env) (x : CST.import_clause) =
@@ -2189,11 +2189,19 @@ and map_tuple_type_body (env : env) ((v1, v2, v3) : CST.tuple_type_body) =
 
 and map_tuple_type_member (env : env) (x : CST.tuple_type_member) =
   (match x with
-  | `Tuple_type_id x -> map_tuple_type_identifier env x
   | `Labe_tuple_type_member (v1, v2) ->
       let v1 = map_tuple_type_identifier env v1 in
       let v2 = map_type_annotation env v2 in
       todo env (v1, v2)
+  | `Opt_type (v1, v2) ->
+      let v1 = map_type_ env v1 in
+      let v2 = token env v2 (* "?" *) in
+      todo env (v1, v2)
+  | `Rest_type (v1, v2) ->
+      let v1 = token env v1 (* "..." *) in
+      let v2 = map_type_ env v2 in
+      todo env (v1, v2)
+  | `Type x -> map_type_ env x
   )
 
 and map_type_ (env : env) (x : CST.type_) =
@@ -2317,6 +2325,7 @@ and map_type_query (env : env) ((v1, v2) : CST.type_query) =
     | `Id tok -> token env tok (* identifier *)
     | `Nested_id x -> map_nested_identifier env x
     | `Gene_type x -> map_generic_type env x
+    | `Call_exp x -> map_call_expression env x
     )
   in
   todo env (v1, v2)
