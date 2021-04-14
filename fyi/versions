@@ -1,0 +1,68 @@
+File: semgrep-grammars/src/tree-sitter-javascript/LICENSE
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 13ec71b610a54adf56482ab78926e9ade220f45f
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Tue Feb 9 14:29:44 2021 -0800
+  
+      Update generated files
+---
+File: semgrep-grammars/src/tree-sitter-javascript/grammar.js
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 13ec71b610a54adf56482ab78926e9ade220f45f
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Tue Feb 9 14:29:44 2021 -0800
+  
+      Update generated files
+---
+File: semgrep-grammars/src/tree-sitter-typescript/LICENSE
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 42c60c0f7a1100ae927cb3f096fc336170de34ea
+  Merge: dfef88e d659f9d
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Thu Feb 11 20:13:09 2021 -0800
+  
+      Merge branch 'master' into for-js-patched-3f8b62f
+---
+File: semgrep-grammars/src/tree-sitter-typescript/common/define-grammar.js
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 42c60c0f7a1100ae927cb3f096fc336170de34ea
+  Merge: dfef88e d659f9d
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Thu Feb 11 20:13:09 2021 -0800
+  
+      Merge branch 'master' into for-js-patched-3f8b62f
+---
+File: semgrep-grammars/src/tree-sitter-typescript/typescript/grammar.js
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 42c60c0f7a1100ae927cb3f096fc336170de34ea
+  Merge: dfef88e d659f9d
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Thu Feb 11 20:13:09 2021 -0800
+  
+      Merge branch 'master' into for-js-patched-3f8b62f
+---
+File: semgrep-grammars/src/semgrep-typescript/typescript/grammar.js
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 9bca49eafc8489bc0d508057079bec9b7d10f65e
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Wed Apr 14 16:44:28 2021 -0700
+  
+      Include new file 'fyi/versions' that tracks git info associated with
+      each file in the "FYI" list.
+---
+File: semgrep-grammars/src/tree-sitter-typescript/tsx/grammar.js
+Git repo name: ocaml-tree-sitter
+Last git commit:
+  commit 42c60c0f7a1100ae927cb3f096fc336170de34ea
+  Merge: dfef88e d659f9d
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Thu Feb 11 20:13:09 2021 -0800
+  
+      Merge branch 'master' into for-js-patched-3f8b62f
+---
