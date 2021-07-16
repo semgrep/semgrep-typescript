@@ -37,6 +37,7 @@ let children_regexps : (string * Run.exp option) list = [
   "hash_bang_line", None;
   "number", None;
   "private_property_identifier", None;
+  "unescaped_double_string_fragment", None;
   "regex_flags", None;
   "template_chars", None;
   "regex_pattern", None;
@@ -53,6 +54,7 @@ let children_regexps : (string * Run.exp option) list = [
   );
   "function_signature_automatic_semicolon", None;
   "true", None;
+  "unescaped_single_string_fragment", None;
   "existential_type", None;
   "escape_sequence", None;
   "false", None;
@@ -162,7 +164,7 @@ let children_regexps : (string * Run.exp option) list = [
         Token (Literal "\"");
         Repeat (
           Alt [|
-            Nothing;
+            Token (Name "unescaped_double_string_fragment");
             Token (Name "escape_sequence");
           |];
         );
@@ -172,7 +174,7 @@ let children_regexps : (string * Run.exp option) list = [
         Token (Literal "'");
         Repeat (
           Alt [|
-            Nothing;
+            Token (Name "unescaped_single_string_fragment");
             Token (Name "escape_sequence");
           |];
         );
@@ -3205,6 +3207,11 @@ let trans_private_property_identifier ((kind, body) : mt) : CST.private_property
   | Leaf v -> v
   | Children _ -> assert false
 
+let trans_unescaped_double_string_fragment ((kind, body) : mt) : CST.unescaped_double_string_fragment =
+  match body with
+  | Leaf v -> v
+  | Children _ -> assert false
+
 
 let trans_regex_flags ((kind, body) : mt) : CST.regex_flags =
   match body with
@@ -3267,6 +3274,11 @@ let trans_true_ ((kind, body) : mt) : CST.true_ =
   | Children _ -> assert false
 
 
+
+let trans_unescaped_single_string_fragment ((kind, body) : mt) : CST.unescaped_single_string_fragment =
+  match body with
+  | Leaf v -> v
+  | Children _ -> assert false
 
 let trans_existential_type ((kind, body) : mt) : CST.existential_type =
   match body with
@@ -3515,7 +3527,7 @@ let trans_string_ ((kind, body) : mt) : CST.string_ =
   | Children v ->
       (match v with
       | Alt (0, v) ->
-          `DQUOT_rep_choice_blank_DQUOT (
+          `DQUOT_rep_choice_unes_double_str_frag_DQUOT (
             (match v with
             | Seq [v0; v1; v2] ->
                 (
@@ -3524,8 +3536,8 @@ let trans_string_ ((kind, body) : mt) : CST.string_ =
                     (fun v ->
                       (match v with
                       | Alt (0, v) ->
-                          `Blank (
-                            Run.nothing v
+                          `Unes_double_str_frag (
+                            trans_unescaped_double_string_fragment (Run.matcher_token v)
                           )
                       | Alt (1, v) ->
                           `Esc_seq (
@@ -3542,7 +3554,7 @@ let trans_string_ ((kind, body) : mt) : CST.string_ =
             )
           )
       | Alt (1, v) ->
-          `SQUOT_rep_choice_blank_SQUOT (
+          `SQUOT_rep_choice_unes_single_str_frag_SQUOT (
             (match v with
             | Seq [v0; v1; v2] ->
                 (
@@ -3551,8 +3563,8 @@ let trans_string_ ((kind, body) : mt) : CST.string_ =
                     (fun v ->
                       (match v with
                       | Alt (0, v) ->
-                          `Blank (
-                            Run.nothing v
+                          `Unes_single_str_frag (
+                            trans_unescaped_single_string_fragment (Run.matcher_token v)
                           )
                       | Alt (1, v) ->
                           `Esc_seq (
