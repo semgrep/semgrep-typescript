@@ -2,68 +2,88 @@ File: semgrep-grammars/src/tree-sitter-javascript/LICENSE
 Git repo name: tree-sitter-javascript
 Latest commit in repo: 2c5b138ea488259dbf11a34595042eb261965259
 Last change in file:
-  commit 2c5b138ea488259dbf11a34595042eb261965259
-  Author: Yoann Padioleau <yoann.padioleau@gmail.com>
-  Date:   Sun Jul 4 09:09:29 2021 +0200
+  commit 4238b076ad40b02d662c625b4be17f2e5e2d118d
+  Author: Max Brunsfeld <maxbrunsfeld@gmail.com>
+  Date:   Thu May 9 17:45:06 2019 -0700
   
-      Merge pull request #184 from tree-sitter/mj-no-string-blank
-      
-      Get nodes for string fragments
+      Use new API to track locals for syntax highlighting
 ---
 File: semgrep-grammars/src/tree-sitter-javascript/grammar.js
 Git repo name: tree-sitter-javascript
 Latest commit in repo: 2c5b138ea488259dbf11a34595042eb261965259
 Last change in file:
-  commit 2c5b138ea488259dbf11a34595042eb261965259
-  Author: Yoann Padioleau <yoann.padioleau@gmail.com>
-  Date:   Sun Jul 4 09:09:29 2021 +0200
+  commit 9d505df228b5ec762f746e5374c4fbb705163c0b
+  Author: Martin Jambon <martin@returntocorp.com>
+  Date:   Sat Jul 3 02:54:04 2021 -0700
   
-      Merge pull request #184 from tree-sitter/mj-no-string-blank
-      
-      Get nodes for string fragments
+      Regenerate files
 ---
 File: semgrep-grammars/src/tree-sitter-typescript/LICENSE
 Git repo name: tree-sitter-typescript
 Latest commit in repo: 5f90415434414122111ea124d456ea1cc0770d16
 Last change in file:
-  commit 5f90415434414122111ea124d456ea1cc0770d16
-  Author: Martin Jambon <martin@returntocorp.com>
-  Date:   Mon Oct 11 11:49:08 2021 -0700
+  commit c17fe899610ec86ad3e60899ba76b281d9750155
+  Author: João Paulo Silva de Souza <17429390+resolritter@users.noreply.github.com>
+  Date:   Thu Feb 4 21:54:42 2021 -0300
   
-      Merge pull request #188 from IWANABETHATGUY/fix/template-literal
+      Fix ambiguity between function signature and function declaration (#126)
       
-      fix: 🐛 template-literal-type with infer type
+      * fix ambiguity between function signature and function declaration
+      
+      * tweak parse-examples script
+      
+      * add redux to the ignored repositories
+      
+      * regenerate parser for function_signature
+      
+      * Simplify function_signature rule
+      
+      * Move known failures from parse-examples script into known_failures.txt
+      
+      Co-authored-by: resolritter <resolritter@users.noreply.github.com>
+      Co-authored-by: Max Brunsfeld <maxbrunsfeld@gmail.com>
 ---
 File: semgrep-grammars/src/tree-sitter-typescript/common/define-grammar.js
 Git repo name: tree-sitter-typescript
 Latest commit in repo: 5f90415434414122111ea124d456ea1cc0770d16
 Last change in file:
-  commit 5f90415434414122111ea124d456ea1cc0770d16
-  Author: Martin Jambon <martin@returntocorp.com>
-  Date:   Mon Oct 11 11:49:08 2021 -0700
+  commit a4b1bb6d4502b6024c57d5f30fe437e645bfc87f
+  Author: IWANABETHATGUY <974153916@qq.com>
+  Date:   Sun Oct 10 02:39:12 2021 +0800
   
-      Merge pull request #188 from IWANABETHATGUY/fix/template-literal
-      
       fix: 🐛 template-literal-type with infer type
 ---
 File: semgrep-grammars/src/tree-sitter-typescript/typescript/grammar.js
 Git repo name: tree-sitter-typescript
 Latest commit in repo: 5f90415434414122111ea124d456ea1cc0770d16
 Last change in file:
-  commit 5f90415434414122111ea124d456ea1cc0770d16
-  Author: Martin Jambon <martin@returntocorp.com>
-  Date:   Mon Oct 11 11:49:08 2021 -0700
+  commit c17fe899610ec86ad3e60899ba76b281d9750155
+  Author: João Paulo Silva de Souza <17429390+resolritter@users.noreply.github.com>
+  Date:   Thu Feb 4 21:54:42 2021 -0300
   
-      Merge pull request #188 from IWANABETHATGUY/fix/template-literal
+      Fix ambiguity between function signature and function declaration (#126)
       
-      fix: 🐛 template-literal-type with infer type
+      * fix ambiguity between function signature and function declaration
+      
+      * tweak parse-examples script
+      
+      * add redux to the ignored repositories
+      
+      * regenerate parser for function_signature
+      
+      * Simplify function_signature rule
+      
+      * Move known failures from parse-examples script into known_failures.txt
+      
+      Co-authored-by: resolritter <resolritter@users.noreply.github.com>
+      Co-authored-by: Max Brunsfeld <maxbrunsfeld@gmail.com>
 ---
 File: semgrep-grammars/src/semgrep-typescript/typescript/grammar.js
 Git repo name: ocaml-tree-sitter-semgrep
-Latest commit in repo: 337a2aec2bace65b59cace6f67a4a1588d2ca689
+Latest commit in repo: 9377521ad8c264ae1555e40b8906345c04904267
 Last change in file:
   commit 1cfa0a2c63a1218cf7752cb1504689eed2511548
-  Merge: e5e0c029006 dbc2761d2c6
+  Merge: e5e0c02 dbc2761
   Author: Martin Jambon <martin@mjambon.com>
   Date:   Fri Feb 5 17:06:26 2021 -0800
   
@@ -77,11 +97,24 @@ File: semgrep-grammars/src/tree-sitter-typescript/tsx/grammar.js
 Git repo name: tree-sitter-typescript
 Latest commit in repo: 5f90415434414122111ea124d456ea1cc0770d16
 Last change in file:
-  commit 5f90415434414122111ea124d456ea1cc0770d16
-  Author: Martin Jambon <martin@returntocorp.com>
-  Date:   Mon Oct 11 11:49:08 2021 -0700
+  commit c17fe899610ec86ad3e60899ba76b281d9750155
+  Author: João Paulo Silva de Souza <17429390+resolritter@users.noreply.github.com>
+  Date:   Thu Feb 4 21:54:42 2021 -0300
   
-      Merge pull request #188 from IWANABETHATGUY/fix/template-literal
+      Fix ambiguity between function signature and function declaration (#126)
       
-      fix: 🐛 template-literal-type with infer type
+      * fix ambiguity between function signature and function declaration
+      
+      * tweak parse-examples script
+      
+      * add redux to the ignored repositories
+      
+      * regenerate parser for function_signature
+      
+      * Simplify function_signature rule
+      
+      * Move known failures from parse-examples script into known_failures.txt
+      
+      Co-authored-by: resolritter <resolritter@users.noreply.github.com>
+      Co-authored-by: Max Brunsfeld <maxbrunsfeld@gmail.com>
 ---
