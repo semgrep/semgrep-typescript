@@ -23,15 +23,15 @@ type automatic_semicolon = Token.t
 
 type imm_tok_slash = Token.t (* "/" *)
 
+type unescaped_single_string_fragment = Token.t (* pattern "[^'\\\\]+" *)
+
 type accessibility_modifier = [
     `Public of Token.t (* "public" *)
   | `Priv of Token.t (* "private" *)
   | `Prot of Token.t (* "protected" *)
 ]
 
-type unescaped_single_string_fragment = Token.t (* pattern "[^'\\\\]+" *)
-
-type template_chars = Token.t
+type unescaped_double_string_fragment = Token.t (* pattern "[^\"\\\\]+" *)
 
 type anon_choice_DOT_d88d0af = [
     `DOT of Token.t (* "." *)
@@ -40,11 +40,12 @@ type anon_choice_DOT_d88d0af = [
 
 type escape_sequence = Token.t
 
-type unescaped_double_string_fragment = Token.t (* pattern "[^\"\\\\]+" *)
-
 type regex_pattern = Token.t
 
 type import = Token.t
+
+type semgrep_metavar_ellipsis =
+  Token.t (* pattern \$\.\.\.[A-Z_][A-Z_0-9]* *)
 
 type number = Token.t
 
@@ -66,7 +67,7 @@ type predefined_type = [
 
 type jsx_text = Token.t (* pattern [^{}<>]+ *)
 
-type ternary_qmark = Token.t
+type template_chars = Token.t
 
 type hash_bang_line = Token.t (* pattern #!.* *)
 
@@ -78,6 +79,8 @@ type anon_choice_get_8fb02de = [
   | `Set of Token.t (* "set" *)
   | `STAR of Token.t (* "*" *)
 ]
+
+type ternary_qmark = Token.t
 
 type reserved_identifier = [
     `Decl of Token.t (* "declare" *)
@@ -1460,12 +1463,18 @@ type jsx_expression = (
   * Token.t (* "}" *)
 )
 
-type jsx_attribute_ = [
-    `Jsx_attr of (
-        jsx_attribute_name
-      * (Token.t (* "=" *) * jsx_attribute_value) option
-    )
-  | `Jsx_exp of jsx_expression
+type jsx_attribute = (
+    jsx_attribute_name
+  * (Token.t (* "=" *) * jsx_attribute_value) option
+)
+
+and jsx_attribute_ = [
+    `Choice_jsx_attr of [
+        `Jsx_attr of jsx_attribute
+      | `Jsx_exp of jsx_expression
+    ]
+  | `Semg_ellips of Token.t (* "..." *)
+  | `Semg_meta_ellips of semgrep_metavar_ellipsis (*tok*)
 ]
 
 and jsx_attribute_value = [
@@ -1513,23 +1522,23 @@ and jsx_opening_element = (
   * Token.t (* ">" *)
 )
 
-type super (* inlined *) = Token.t (* "super" *)
-
 type null (* inlined *) = Token.t (* "null" *)
 
+type super (* inlined *) = Token.t (* "super" *)
+
 type false_ (* inlined *) = Token.t (* "false" *)
+
+type undefined (* inlined *) = Token.t (* "undefined" *)
 
 type override_modifier (* inlined *) = Token.t (* "override" *)
 
 type comment (* inlined *) = Token.t
 
-type undefined (* inlined *) = Token.t (* "undefined" *)
+type true_ (* inlined *) = Token.t (* "true" *)
 
 type existential_type (* inlined *) = Token.t (* "*" *)
 
 type semgrep_ellipsis (* inlined *) = Token.t (* "..." *)
-
-type true_ (* inlined *) = Token.t (* "true" *)
 
 type this (* inlined *) = Token.t (* "this" *)
 
@@ -1943,11 +1952,6 @@ type field_definition (* inlined *) = (
   * initializer_ option
 )
 
-type jsx_attribute (* inlined *) = (
-    jsx_attribute_name
-  * (Token.t (* "=" *) * jsx_attribute_value) option
-)
-
 type jsx_element (* inlined *) = (
     jsx_opening_element
   * jsx_child list (* zero or more *)
@@ -1967,3 +1971,7 @@ type jsx_start_opening_element (* inlined *) = (
   * anon_choice_jsx_attr_name_b052322
   * jsx_attribute_ list (* zero or more *)
 )
+
+type extra = Comment of Loc.t * comment
+
+type extras = extra list
