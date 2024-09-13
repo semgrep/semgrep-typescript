@@ -1972,6 +1972,6 @@ type jsx_start_opening_element (* inlined *) = (
   * jsx_attribute_ list (* zero or more *)
 )
 
-type extra = Comment of Loc.t * comment
+type extra = [ `Comment of Loc.t * comment ]
 
 type extras = extra list
