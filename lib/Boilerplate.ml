@@ -44,9 +44,6 @@ let map_automatic_semicolon (env : env) (tok : CST.automatic_semicolon) =
 let map_imm_tok_slash (env : env) (tok : CST.imm_tok_slash) =
   (* "/" *) token env tok
 
-let map_unescaped_single_string_fragment (env : env) (tok : CST.unescaped_single_string_fragment) =
-  (* pattern "[^'\\\\]+" *) token env tok
-
 let map_accessibility_modifier (env : env) (x : CST.accessibility_modifier) =
   (match x with
   | `Public tok -> R.Case ("Public",
@@ -60,8 +57,11 @@ let map_accessibility_modifier (env : env) (x : CST.accessibility_modifier) =
     )
   )
 
-let map_unescaped_double_string_fragment (env : env) (tok : CST.unescaped_double_string_fragment) =
-  (* pattern "[^\"\\\\]+" *) token env tok
+let map_unescaped_single_string_fragment (env : env) (tok : CST.unescaped_single_string_fragment) =
+  (* pattern "[^'\\\\]+" *) token env tok
+
+let map_template_chars (env : env) (tok : CST.template_chars) =
+  (* template_chars *) token env tok
 
 let map_anon_choice_DOT_d88d0af (env : env) (x : CST.anon_choice_DOT_d88d0af) =
   (match x with
@@ -76,14 +76,14 @@ let map_anon_choice_DOT_d88d0af (env : env) (x : CST.anon_choice_DOT_d88d0af) =
 let map_escape_sequence (env : env) (tok : CST.escape_sequence) =
   (* escape_sequence *) token env tok
 
+let map_unescaped_double_string_fragment (env : env) (tok : CST.unescaped_double_string_fragment) =
+  (* pattern "[^\"\\\\]+" *) token env tok
+
 let map_regex_pattern (env : env) (tok : CST.regex_pattern) =
   (* regex_pattern *) token env tok
 
 let map_import (env : env) (tok : CST.import) =
   (* import *) token env tok
-
-let map_semgrep_metavar_ellipsis (env : env) (tok : CST.semgrep_metavar_ellipsis) =
-  (* pattern \$\.\.\.[A-Z_][A-Z_0-9]* *) token env tok
 
 let map_number (env : env) (tok : CST.number) =
   (* number *) token env tok
@@ -128,8 +128,8 @@ let map_predefined_type (env : env) (x : CST.predefined_type) =
 let map_jsx_text (env : env) (tok : CST.jsx_text) =
   (* pattern [^{}<>]+ *) token env tok
 
-let map_template_chars (env : env) (tok : CST.template_chars) =
-  (* template_chars *) token env tok
+let map_ternary_qmark (env : env) (tok : CST.ternary_qmark) =
+  (* ternary_qmark *) token env tok
 
 let map_hash_bang_line (env : env) (tok : CST.hash_bang_line) =
   (* pattern #!.* *) token env tok
@@ -149,9 +149,6 @@ let map_anon_choice_get_8fb02de (env : env) (x : CST.anon_choice_get_8fb02de) =
       (* "*" *) token env tok
     )
   )
-
-let map_ternary_qmark (env : env) (tok : CST.ternary_qmark) =
-  (* ternary_qmark *) token env tok
 
 let map_reserved_identifier (env : env) (x : CST.reserved_identifier) =
   (match x with
@@ -3694,36 +3691,23 @@ let map_jsx_expression (env : env) ((v1, v2, v3) : CST.jsx_expression) =
   let v3 = (* "}" *) token env v3 in
   R.Tuple [v1; v2; v3]
 
-let rec map_jsx_attribute (env : env) ((v1, v2) : CST.jsx_attribute) =
-  let v1 = map_jsx_attribute_name env v1 in
-  let v2 =
-    (match v2 with
-    | Some (v1, v2) -> R.Option (Some (
-        let v1 = (* "=" *) token env v1 in
-        let v2 = map_jsx_attribute_value env v2 in
-        R.Tuple [v1; v2]
-      ))
-    | None -> R.Option None)
-  in
-  R.Tuple [v1; v2]
-
-and map_jsx_attribute_ (env : env) (x : CST.jsx_attribute_) =
+let rec map_jsx_attribute_ (env : env) (x : CST.jsx_attribute_) =
   (match x with
-  | `Choice_jsx_attr x -> R.Case ("Choice_jsx_attr",
-      (match x with
-      | `Jsx_attr x -> R.Case ("Jsx_attr",
-          map_jsx_attribute env x
-        )
-      | `Jsx_exp x -> R.Case ("Jsx_exp",
-          map_jsx_expression env x
-        )
-      )
+  | `Jsx_attr (v1, v2) -> R.Case ("Jsx_attr",
+      let v1 = map_jsx_attribute_name env v1 in
+      let v2 =
+        (match v2 with
+        | Some (v1, v2) -> R.Option (Some (
+            let v1 = (* "=" *) token env v1 in
+            let v2 = map_jsx_attribute_value env v2 in
+            R.Tuple [v1; v2]
+          ))
+        | None -> R.Option None)
+      in
+      R.Tuple [v1; v2]
     )
-  | `Semg_ellips tok -> R.Case ("Semg_ellips",
-      (* "..." *) token env tok
-    )
-  | `Semg_meta_ellips tok -> R.Case ("Semg_meta_ellips",
-      (* pattern \$\.\.\.[A-Z_][A-Z_0-9]* *) token env tok
+  | `Jsx_exp x -> R.Case ("Jsx_exp",
+      map_jsx_expression env x
     )
   )
 

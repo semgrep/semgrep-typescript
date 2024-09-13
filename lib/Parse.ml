@@ -38,7 +38,7 @@ let children_regexps : (string * Run.exp option) list = [
   "null", None;
   "override_modifier", None;
   "comment", None;
-  "this", None;
+  "true", None;
   "empty_statement", None;
   "private_property_identifier", None;
   "accessibility_modifier",
@@ -49,18 +49,17 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Literal "protected");
     |];
   );
-  "true", None;
   "function_signature_automatic_semicolon", None;
   "import", None;
   "regex_flags", None;
-  "ternary_qmark", None;
+  "this", None;
   "escape_sequence", None;
   "false", None;
   "hash_bang_line", None;
-  "template_chars", None;
+  "ternary_qmark", None;
   "semgrep_expression_ellipsis", None;
   "regex_pattern", None;
-  "unescaped_single_string_fragment", None;
+  "undefined", None;
   "predefined_type",
   Some (
     Alt [|
@@ -75,7 +74,8 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Literal "object");
     |];
   );
-  "unescaped_double_string_fragment", None;
+  "super", None;
+  "unescaped_single_string_fragment", None;
   "meta_property",
   Some (
     Seq [
@@ -84,9 +84,9 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Literal "target");
     ];
   );
-  "undefined", None;
+  "unescaped_double_string_fragment", None;
   "existential_type", None;
-  "super", None;
+  "template_chars", None;
   "automatic_semicolon", None;
   "imm_tok_slash", None;
   "import_export_specifier",
@@ -3411,8 +3411,7 @@ let trans_comment ((kind, body) : mt) : CST.comment =
   | Leaf v -> v
   | Children _ -> assert false
 
-
-let trans_this ((kind, body) : mt) : CST.this =
+let trans_true_ ((kind, body) : mt) : CST.true_ =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3447,11 +3446,6 @@ let trans_accessibility_modifier ((kind, body) : mt) : CST.accessibility_modifie
       )
   | Leaf _ -> assert false
 
-let trans_true_ ((kind, body) : mt) : CST.true_ =
-  match body with
-  | Leaf v -> v
-  | Children _ -> assert false
-
 let trans_function_signature_automatic_semicolon ((kind, body) : mt) : CST.function_signature_automatic_semicolon =
   match body with
   | Leaf v -> v
@@ -3467,7 +3461,7 @@ let trans_regex_flags ((kind, body) : mt) : CST.regex_flags =
   | Leaf v -> v
   | Children _ -> assert false
 
-let trans_ternary_qmark ((kind, body) : mt) : CST.ternary_qmark =
+let trans_this ((kind, body) : mt) : CST.this =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3487,7 +3481,7 @@ let trans_hash_bang_line ((kind, body) : mt) : CST.hash_bang_line =
   | Leaf v -> v
   | Children _ -> assert false
 
-let trans_template_chars ((kind, body) : mt) : CST.template_chars =
+let trans_ternary_qmark ((kind, body) : mt) : CST.ternary_qmark =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3504,7 +3498,7 @@ let trans_regex_pattern ((kind, body) : mt) : CST.regex_pattern =
   | Leaf v -> v
   | Children _ -> assert false
 
-let trans_unescaped_single_string_fragment ((kind, body) : mt) : CST.unescaped_single_string_fragment =
+let trans_undefined ((kind, body) : mt) : CST.undefined =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3553,7 +3547,12 @@ let trans_predefined_type ((kind, body) : mt) : CST.predefined_type =
       )
   | Leaf _ -> assert false
 
-let trans_unescaped_double_string_fragment ((kind, body) : mt) : CST.unescaped_double_string_fragment =
+let trans_super ((kind, body) : mt) : CST.super =
+  match body with
+  | Leaf v -> v
+  | Children _ -> assert false
+
+let trans_unescaped_single_string_fragment ((kind, body) : mt) : CST.unescaped_single_string_fragment =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3572,7 +3571,7 @@ let trans_meta_property ((kind, body) : mt) : CST.meta_property =
       )
   | Leaf _ -> assert false
 
-let trans_undefined ((kind, body) : mt) : CST.undefined =
+let trans_unescaped_double_string_fragment ((kind, body) : mt) : CST.unescaped_double_string_fragment =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3584,7 +3583,7 @@ let trans_existential_type ((kind, body) : mt) : CST.existential_type =
   | Leaf v -> v
   | Children _ -> assert false
 
-let trans_super ((kind, body) : mt) : CST.super =
+let trans_template_chars ((kind, body) : mt) : CST.template_chars =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
@@ -3598,6 +3597,7 @@ let trans_imm_tok_slash ((kind, body) : mt) : CST.imm_tok_slash =
   match body with
   | Leaf v -> v
   | Children _ -> assert false
+
 
 let trans_import_export_specifier ((kind, body) : mt) : CST.import_export_specifier =
   match body with
@@ -3651,7 +3651,6 @@ let trans_infer_type ((kind, body) : mt) : CST.infer_type =
       | _ -> assert false
       )
   | Leaf _ -> assert false
-
 
 let rec trans_nested_identifier ((kind, body) : mt) : CST.nested_identifier =
   match body with
@@ -3740,6 +3739,7 @@ let trans_number_ ((kind, body) : mt) : CST.number_ =
       | _ -> assert false
       )
   | Leaf _ -> assert false
+
 
 let trans_string_ ((kind, body) : mt) : CST.string_ =
   match body with
@@ -3832,7 +3832,6 @@ let trans_break_statement ((kind, body) : mt) : CST.break_statement =
       | _ -> assert false
       )
   | Leaf _ -> assert false
-
 
 let trans_debugger_statement ((kind, body) : mt) : CST.debugger_statement =
   match body with
@@ -11904,6 +11903,7 @@ and trans_yield_expression ((kind, body) : mt) : CST.yield_expression =
 
 
 
+
 let trans_program ((kind, body) : mt) : CST.program =
   match body with
   | Children v ->
@@ -12015,7 +12015,6 @@ let trans_program ((kind, body) : mt) : CST.program =
       | _ -> assert false
       )
   | Leaf _ -> assert false
-
 
 
 
