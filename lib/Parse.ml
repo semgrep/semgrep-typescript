@@ -57,6 +57,7 @@ let children_regexps : (string * Run.exp option) list = [
   "false", None;
   "hash_bang_line", None;
   "ternary_qmark", None;
+  "semgrep_ellipsis", None;
   "semgrep_expression_ellipsis", None;
   "regex_pattern", None;
   "undefined", None;
@@ -1556,6 +1557,7 @@ let children_regexps : (string * Run.exp option) list = [
   "formal_parameter",
   Some (
     Alt [|
+      Token (Name "semgrep_ellipsis");
       Token (Name "required_parameter");
       Token (Name "optional_parameter");
     |];
@@ -3486,6 +3488,10 @@ let trans_ternary_qmark ((kind, body) : mt) : CST.ternary_qmark =
   | Leaf v -> v
   | Children _ -> assert false
 
+let trans_semgrep_ellipsis ((kind, body) : mt) : CST.semgrep_ellipsis =
+  match body with
+  | Leaf v -> v
+  | Children _ -> assert false
 
 
 let trans_semgrep_expression_ellipsis ((kind, body) : mt) : CST.semgrep_expression_ellipsis =
@@ -7274,10 +7280,14 @@ and trans_formal_parameter ((kind, body) : mt) : CST.formal_parameter =
   | Children v ->
       (match v with
       | Alt (0, v) ->
+          `Semg_ellips (
+            trans_semgrep_ellipsis (Run.matcher_token v)
+          )
+      | Alt (1, v) ->
           `Requ_param (
             trans_required_parameter (Run.matcher_token v)
           )
-      | Alt (1, v) ->
+      | Alt (2, v) ->
           `Opt_param (
             trans_optional_parameter (Run.matcher_token v)
           )
