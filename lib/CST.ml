@@ -404,7 +404,7 @@ and anon_choice_import_c99ceb4 = [
 ]
 
 and anon_choice_pair_20c9acd = [
-    `Pair of (property_name * Token.t (* ":" *) * expression)
+    `Pair of pair
   | `Spread_elem of spread_element
   | `Meth_defi of method_definition
   | `Choice_id of anon_choice_type_id_dd17e7d
@@ -1146,6 +1146,11 @@ and object_type = (
 and omitting_type_annotation = (Token.t (* "-?:" *) * type_)
 
 and opting_type_annotation = (Token.t (* "?:" *) * type_)
+
+and pair = [
+    `Prop_name_COLON_exp of (property_name * Token.t (* ":" *) * expression)
+  | `Semg_ellips of Token.t (* "..." *)
+]
 
 and parameter_name = (
     decorator list (* zero or more *)
@@ -1979,8 +1984,6 @@ type optional_tuple_parameter (* inlined *) = (
 )
 
 type optional_type (* inlined *) = (type_ * Token.t (* "?" *))
-
-type pair (* inlined *) = (property_name * Token.t (* ":" *) * expression)
 
 type pair_pattern (* inlined *) = (
     property_name * Token.t (* ":" *) * anon_choice_pat_3297d92
