@@ -8,6 +8,8 @@
 open! Sexplib.Conv
 open Tree_sitter_run
 
+type template_chars = Token.t
+
 type jsx_text = Token.t
 
 type anon_choice_PLUSPLUS_e498e28 = [
@@ -19,7 +21,8 @@ type function_signature_automatic_semicolon = Token.t
 
 type automatic_semicolon = Token.t
 
-type ternary_qmark = Token.t
+type unescaped_single_string_fragment =
+  Token.t (* pattern "[^'\\\\\\r\\n]+" *)
 
 type hash_bang_line = Token.t (* pattern #!.* *)
 
@@ -34,13 +37,13 @@ type meta_property = [
     )
 ]
 
-type template_chars = Token.t
-
 type accessibility_modifier = [
     `Public of Token.t (* "public" *)
   | `Priv of Token.t (* "private" *)
   | `Prot of Token.t (* "protected" *)
 ]
+
+type ternary_qmark = Token.t
 
 type escape_sequence = Token.t
 
@@ -53,21 +56,17 @@ type anon_choice_DASH_81d4819 = [
 
 type imm_tok_prec_p1_slash = Token.t (* "/" *)
 
-type unescaped_double_string_fragment =
-  Token.t (* pattern "[^\"\\\\\\r\\n]+" *)
-
 type html_character_reference =
   Token.t (* pattern &(#([xX][0-9a-fA-F]{1,6}|[0-9]{1,5})|[A-Za-z]{1,30}); *)
 
 type number = Token.t
 
-type unescaped_single_string_fragment =
-  Token.t (* pattern "[^'\\\\\\r\\n]+" *)
-
-type unescaped_double_jsx_string_fragment =
-  Token.t (* pattern "([^\"&]|&[^#A-Za-z])+" *)
+type unescaped_double_string_fragment =
+  Token.t (* pattern "[^\"\\\\\\r\\n]+" *)
 
 type identifier = Token.t
+
+type semgrep_metavariable = Token.t (* pattern \$[A-Z_][A-Z_0-9]* *)
 
 type reserved_identifier = [
     `Decl of Token.t (* "declare" *)
@@ -135,6 +134,9 @@ type anon_choice_let_ca16eb3 = [
 
 type unescaped_single_jsx_string_fragment =
   Token.t (* pattern "([^'&]|&[^#A-Za-z])+" *)
+
+type unescaped_double_jsx_string_fragment =
+  Token.t (* pattern "([^\"&]|&[^#A-Za-z])+" *)
 
 type semicolon = [
     `Auto_semi of automatic_semicolon (*tok*)
@@ -1607,6 +1609,8 @@ and variable_declarator = [
     )
 ]
 
+type semgrep_pattern = [ `Exp of expression | `Pair of pair ]
+
 type anon_choice_jsx_attr_name_b052322 = [
     `Choice_choice_jsx_id of jsx_attribute_name
   | `Choice_id_opt_type_args of (
@@ -1625,15 +1629,6 @@ type jsx_expression = (
       option
   * Token.t (* "}" *)
 )
-
-type program = [
-    `Opt_hash_bang_line_rep_stmt of (
-        hash_bang_line (*tok*) option
-      * statement list (* zero or more *)
-    )
-  | `Switch_case of switch_case
-  | `Semg_exp of (Token.t (* "__SEMGREP_EXPRESSION" *) * expression)
-]
 
 type anon_opt_choice_jsx_attr_name_rep_jsx_attr__8497dc0 =
   (
@@ -1657,10 +1652,14 @@ and jsx_attribute_value = [
 ]
 
 and jsx_child = [
-    `Jsx_text of jsx_text (*tok*)
-  | `Html_char_ref of html_character_reference (*tok*)
-  | `Choice_jsx_elem of jsx_element_
-  | `Jsx_exp of jsx_expression
+    `Choice_jsx_text of [
+        `Jsx_text of jsx_text (*tok*)
+      | `Html_char_ref of html_character_reference (*tok*)
+      | `Choice_jsx_elem of jsx_element_
+      | `Jsx_exp of jsx_expression
+    ]
+  | `Semg_ellips of Token.t (* "..." *)
+  | `Semg_meta of semgrep_metavariable (*tok*)
 ]
 
 and jsx_element_ = [
@@ -1681,17 +1680,26 @@ and jsx_opening_element = (
   * Token.t (* ">" *)
 )
 
+type program = [
+    `Opt_hash_bang_line_rep_stmt of (
+        hash_bang_line (*tok*) option
+      * statement list (* zero or more *)
+    )
+  | `Switch_case of switch_case
+  | `Semg_exp of (Token.t (* "__SEMGREP_EXPRESSION" *) * semgrep_pattern)
+]
+
 type comment (* inlined *) = Token.t
 
 type this (* inlined *) = Token.t (* "this" *)
-
-type true_ (* inlined *) = Token.t (* "true" *)
 
 type super (* inlined *) = Token.t (* "super" *)
 
 type existential_type (* inlined *) = Token.t (* "*" *)
 
 type empty_statement (* inlined *) = Token.t (* ";" *)
+
+type undefined (* inlined *) = Token.t (* "undefined" *)
 
 type optional_chain (* inlined *) = Token.t (* "?." *)
 
@@ -1709,7 +1717,7 @@ type html_comment (* inlined *) = Token.t
 
 type override_modifier (* inlined *) = Token.t (* "override" *)
 
-type undefined (* inlined *) = Token.t (* "undefined" *)
+type true_ (* inlined *) = Token.t (* "true" *)
 
 type number_ (* inlined *) = (anon_choice_DASH_81d4819 * number (*tok*))
 
@@ -2135,7 +2143,7 @@ type field_definition (* inlined *) = (
 )
 
 type semgrep_expression (* inlined *) = (
-    Token.t (* "__SEMGREP_EXPRESSION" *) * expression
+    Token.t (* "__SEMGREP_EXPRESSION" *) * semgrep_pattern
 )
 
 type jsx_attribute (* inlined *) = (
