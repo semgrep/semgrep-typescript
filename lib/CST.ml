@@ -1700,6 +1700,14 @@ type semgrep_pattern = [
     `Exp of expression
   | `Pair of pair
   | `Meth_pat of method_pattern
+  | `Func_decl_pat of (
+        Token.t (* "async" *) option
+      * Token.t (* "function" *)
+      * [ `Id of identifier (*tok*) | `Semg_ellips of Token.t (* "..." *) ]
+      * call_signature_
+      * statement_block
+      * automatic_semicolon (*tok*) option
+    )
 ]
 
 type anon_opt_choice_jsx_attr_name_rep_jsx_attr__8497dc0 =
@@ -2111,7 +2119,7 @@ type yield_expression (* inlined *) = (
 type function_declaration_pattern (* inlined *) = (
     Token.t (* "async" *) option
   * Token.t (* "function" *)
-  * identifier (*tok*)
+  * [ `Id of identifier (*tok*) | `Semg_ellips of Token.t (* "..." *) ]
   * call_signature_
   * statement_block
   * automatic_semicolon (*tok*) option
