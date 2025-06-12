@@ -423,7 +423,16 @@ let map_literal_type (env : env) (x : CST.literal_type) =
 
 let map_from_clause (env : env) ((v1, v2) : CST.from_clause) =
   let v1 = (* "from" *) token env v1 in
-  let v2 = map_string_ env v2 in
+  let v2 =
+    (match v2 with
+    | `Str x -> R.Case ("Str",
+        map_string_ env x
+      )
+    | `Semg_meta tok -> R.Case ("Semg_meta",
+        (* pattern \$[A-Z_][A-Z_0-9]* *) token env tok
+      )
+    )
+  in
   R.Tuple [v1; v2]
 
 let map_jsx_identifier_ (env : env) (x : CST.jsx_identifier_) =
@@ -4136,6 +4145,43 @@ and map_with_statement (env : env) ((v1, v2, v3) : CST.with_statement) =
   let v3 = map_statement env v3 in
   R.Tuple [v1; v2; v3]
 
+let map_method_pattern (env : env) (x : CST.method_pattern) =
+  (match x with
+  | `Rep1_deco_public_field_defi (v1, v2) -> R.Case ("Rep1_deco_public_field_defi",
+      let v1 = R.List (List.map (map_decorator env) v1) in
+      let v2 = map_public_field_definition env v2 in
+      R.Tuple [v1; v2]
+    )
+  | `Rep_deco_choice_abst_meth_sign (v1, v2) -> R.Case ("Rep_deco_choice_abst_meth_sign",
+      let v1 = R.List (List.map (map_decorator env) v1) in
+      let v2 =
+        (match v2 with
+        | `Abst_meth_sign x -> R.Case ("Abst_meth_sign",
+            map_abstract_method_signature env x
+          )
+        | `Index_sign x -> R.Case ("Index_sign",
+            map_index_signature env x
+          )
+        | `Meth_sign x -> R.Case ("Meth_sign",
+            map_method_signature env x
+          )
+        | `Meth_defi_opt_choice_auto_semi (v1, v2) -> R.Case ("Meth_defi_opt_choice_auto_semi",
+            let v1 = map_method_definition env v1 in
+            let v2 =
+              (match v2 with
+              | Some x -> R.Option (Some (
+                  map_semicolon env x
+                ))
+              | None -> R.Option None)
+            in
+            R.Tuple [v1; v2]
+          )
+        )
+      in
+      R.Tuple [v1; v2]
+    )
+  )
+
 let map_anon_choice_jsx_attr_name_b052322 (env : env) (x : CST.anon_choice_jsx_attr_name_b052322) =
   (match x with
   | `Choice_choice_jsx_id x -> R.Case ("Choice_choice_jsx_id",
@@ -4184,33 +4230,8 @@ let map_semgrep_pattern (env : env) (x : CST.semgrep_pattern) =
   | `Pair x -> R.Case ("Pair",
       map_pair env x
     )
-  | `Meth_pat (v1, v2) -> R.Case ("Meth_pat",
-      let v1 = R.List (List.map (map_decorator env) v1) in
-      let v2 =
-        (match v2 with
-        | `Abst_meth_sign x -> R.Case ("Abst_meth_sign",
-            map_abstract_method_signature env x
-          )
-        | `Index_sign x -> R.Case ("Index_sign",
-            map_index_signature env x
-          )
-        | `Meth_sign x -> R.Case ("Meth_sign",
-            map_method_signature env x
-          )
-        | `Meth_defi_opt_choice_auto_semi (v1, v2) -> R.Case ("Meth_defi_opt_choice_auto_semi",
-            let v1 = map_method_definition env v1 in
-            let v2 =
-              (match v2 with
-              | Some x -> R.Option (Some (
-                  map_semicolon env x
-                ))
-              | None -> R.Option None)
-            in
-            R.Tuple [v1; v2]
-          )
-        )
-      in
-      R.Tuple [v1; v2]
+  | `Meth_pat x -> R.Case ("Meth_pat",
+      map_method_pattern env x
     )
   | `Func_decl_pat (v1, v2, v3, v4, v5, v6) -> R.Case ("Func_decl_pat",
       let v1 =
@@ -4241,6 +4262,12 @@ let map_semgrep_pattern (env : env) (x : CST.semgrep_pattern) =
         | None -> R.Option None)
       in
       R.Tuple [v1; v2; v3; v4; v5; v6]
+    )
+  | `Fina_clause x -> R.Case ("Fina_clause",
+      map_finally_clause env x
+    )
+  | `Catch_clause x -> R.Case ("Catch_clause",
+      map_catch_clause env x
     )
   )
 

@@ -214,7 +214,10 @@ type literal_type = [
   | `Unde of Token.t (* "undefined" *)
 ]
 
-type from_clause = (Token.t (* "from" *) * string_)
+type from_clause = (
+    Token.t (* "from" *)
+  * [ `Str of string_ | `Semg_meta of semgrep_metavariable (*tok*) ]
+)
 
 type jsx_identifier_ = [
     `Jsx_id of jsx_identifier (*tok*)
@@ -1670,6 +1673,25 @@ and with_statement = (
     Token.t (* "with" *) * parenthesized_expression * statement
 )
 
+type method_pattern = [
+    `Rep1_deco_public_field_defi of (
+        decorator list (* one or more *)
+      * public_field_definition
+    )
+  | `Rep_deco_choice_abst_meth_sign of (
+        decorator list (* zero or more *)
+      * [
+            `Abst_meth_sign of abstract_method_signature
+          | `Index_sign of index_signature
+          | `Meth_sign of method_signature
+          | `Meth_defi_opt_choice_auto_semi of (
+                method_definition
+              * semicolon option
+            )
+        ]
+    )
+]
+
 type anon_choice_jsx_attr_name_b052322 = [
     `Choice_choice_jsx_id of jsx_attribute_name
   | `Choice_id_opt_type_args of (
@@ -1692,18 +1714,7 @@ type jsx_expression = (
 type semgrep_pattern = [
     `Exp of expression
   | `Pair of pair
-  | `Meth_pat of (
-        decorator list (* zero or more *)
-      * [
-            `Abst_meth_sign of abstract_method_signature
-          | `Index_sign of index_signature
-          | `Meth_sign of method_signature
-          | `Meth_defi_opt_choice_auto_semi of (
-                method_definition
-              * semicolon option
-            )
-        ]
-    )
+  | `Meth_pat of method_pattern
   | `Func_decl_pat of (
         Token.t (* "async" *) option
       * Token.t (* "function" *)
@@ -1712,6 +1723,8 @@ type semgrep_pattern = [
       * statement_block
       * automatic_semicolon (*tok*) option
     )
+  | `Fina_clause of finally_clause
+  | `Catch_clause of catch_clause
 ]
 
 type anon_opt_choice_jsx_attr_name_rep_jsx_attr__8497dc0 =
@@ -2127,19 +2140,6 @@ type function_declaration_pattern (* inlined *) = (
   * call_signature_
   * statement_block
   * automatic_semicolon (*tok*) option
-)
-
-type method_pattern (* inlined *) = (
-    decorator list (* zero or more *)
-  * [
-        `Abst_meth_sign of abstract_method_signature
-      | `Index_sign of index_signature
-      | `Meth_sign of method_signature
-      | `Meth_defi_opt_choice_auto_semi of (
-            method_definition
-          * semicolon option
-        )
-    ]
 )
 
 type class_static_block (* inlined *) = (
