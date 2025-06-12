@@ -4111,27 +4111,34 @@ let map_anon_choice_jsx_attr_name_b052322 (env : env) (x : CST.anon_choice_jsx_a
     )
   )
 
-let map_jsx_expression (env : env) ((v1, v2, v3) : CST.jsx_expression) =
-  let v1 = (* "{" *) token env v1 in
-  let v2 =
-    (match v2 with
-    | Some x -> R.Option (Some (
-        (match x with
-        | `Exp x -> R.Case ("Exp",
-            map_expression env x
-          )
-        | `Seq_exp x -> R.Case ("Seq_exp",
-            map_sequence_expression env x
-          )
-        | `Spread_elem x -> R.Case ("Spread_elem",
-            map_spread_element env x
-          )
-        )
-      ))
-    | None -> R.Option None)
-  in
-  let v3 = (* "}" *) token env v3 in
-  R.Tuple [v1; v2; v3]
+let map_jsx_expression (env : env) (x : CST.jsx_expression) =
+  (match x with
+  | `LCURL_opt_choice_exp_RCURL (v1, v2, v3) -> R.Case ("LCURL_opt_choice_exp_RCURL",
+      let v1 = (* "{" *) token env v1 in
+      let v2 =
+        (match v2 with
+        | Some x -> R.Option (Some (
+            (match x with
+            | `Exp x -> R.Case ("Exp",
+                map_expression env x
+              )
+            | `Seq_exp x -> R.Case ("Seq_exp",
+                map_sequence_expression env x
+              )
+            | `Spread_elem x -> R.Case ("Spread_elem",
+                map_spread_element env x
+              )
+            )
+          ))
+        | None -> R.Option None)
+      in
+      let v3 = (* "}" *) token env v3 in
+      R.Tuple [v1; v2; v3]
+    )
+  | `Semg_meta tok -> R.Case ("Semg_meta",
+      (* pattern \$[A-Z_][A-Z_0-9]* *) token env tok
+    )
+  )
 
 let map_semgrep_pattern (env : env) (x : CST.semgrep_pattern) =
   (match x with

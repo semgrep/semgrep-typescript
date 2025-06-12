@@ -1642,16 +1642,19 @@ type anon_choice_jsx_attr_name_b052322 = [
     )
 ]
 
-type jsx_expression = (
-    Token.t (* "{" *)
-  * [
-        `Exp of expression
-      | `Seq_exp of sequence_expression
-      | `Spread_elem of spread_element
-    ]
-      option
-  * Token.t (* "}" *)
-)
+type jsx_expression = [
+    `LCURL_opt_choice_exp_RCURL of (
+        Token.t (* "{" *)
+      * [
+            `Exp of expression
+          | `Seq_exp of sequence_expression
+          | `Spread_elem of spread_element
+        ]
+          option
+      * Token.t (* "}" *)
+    )
+  | `Semg_meta of semgrep_metavariable (*tok*)
+]
 
 type semgrep_pattern = [
     `Exp of expression
