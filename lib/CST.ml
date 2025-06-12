@@ -1666,12 +1666,17 @@ type anon_opt_choice_jsx_attr_name_rep_jsx_attr__8497dc0 =
   )
     option
 
+and jsx_attribute = (
+    jsx_attribute_name
+  * (Token.t (* "=" *) * jsx_attribute_value) option
+)
+
 and jsx_attribute_ = [
-    `Jsx_attr of (
-        jsx_attribute_name
-      * (Token.t (* "=" *) * jsx_attribute_value) option
-    )
-  | `Jsx_exp of jsx_expression
+    `Choice_jsx_attr of [
+        `Jsx_attr of jsx_attribute
+      | `Jsx_exp of jsx_expression
+    ]
+  | `Semg_ellips of Token.t (* "..." *)
 ]
 
 and jsx_attribute_value = [
@@ -2182,11 +2187,6 @@ type field_definition (* inlined *) = (
   * Token.t (* "static" *) option
   * property_name
   * initializer_ option
-)
-
-type jsx_attribute (* inlined *) = (
-    jsx_attribute_name
-  * (Token.t (* "=" *) * jsx_attribute_value) option
 )
 
 type jsx_element (* inlined *) = (
