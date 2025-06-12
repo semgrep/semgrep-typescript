@@ -1184,8 +1184,11 @@ and parenthesized_expression = (
 )
 
 and pattern = [
-    `Choice_choice_member_exp of lhs_expression
-  | `Rest_pat of rest_pattern
+    `Choice_choice_choice_member_exp of [
+        `Choice_choice_member_exp of lhs_expression
+      | `Rest_pat of rest_pattern
+    ]
+  | `Semg_ellips of Token.t (* "..." *)
 ]
 
 and primary_expression = [
