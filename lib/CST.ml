@@ -768,16 +768,7 @@ and decorator_parenthesized_expression = (
 and default_type = (Token.t (* "=" *) * type_)
 
 and destructuring_pattern = [
-    `Obj_pat of (
-        Token.t (* "{" *)
-      * (
-            anon_choice_pair_pat_3ff9cbe option
-          * (Token.t (* "," *) * anon_choice_pair_pat_3ff9cbe option)
-              list (* zero or more *)
-        )
-          option
-      * Token.t (* "}" *)
-    )
+    `Obj_pat of object_pattern
   | `Array_pat of (
         Token.t (* "[" *)
       * (
@@ -1216,6 +1207,17 @@ and object_ = (
   * (
         anon_choice_pair_20c9acd option
       * (Token.t (* "," *) * anon_choice_pair_20c9acd option)
+          list (* zero or more *)
+    )
+      option
+  * Token.t (* "}" *)
+)
+
+and object_pattern = (
+    Token.t (* "{" *)
+  * (
+        anon_choice_pair_pat_3ff9cbe option
+      * (Token.t (* "," *) * anon_choice_pair_pat_3ff9cbe option)
           list (* zero or more *)
     )
       option
@@ -1733,6 +1735,7 @@ type semgrep_pattern = [
       * call_signature_
       * statement_block
     )
+  | `Obj_pat of object_pattern
 ]
 
 type anon_opt_choice_jsx_attr_name_rep_jsx_attr__8497dc0 =
@@ -2013,17 +2016,6 @@ type object_assignment_pattern (* inlined *) = (
     ]
   * Token.t (* "=" *)
   * expression
-)
-
-type object_pattern (* inlined *) = (
-    Token.t (* "{" *)
-  * (
-        anon_choice_pair_pat_3ff9cbe option
-      * (Token.t (* "," *) * anon_choice_pair_pat_3ff9cbe option)
-          list (* zero or more *)
-    )
-      option
-  * Token.t (* "}" *)
 )
 
 type optional_parameter (* inlined *) = (
