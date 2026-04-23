@@ -3523,6 +3523,7 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "finally_clause");
       Token (Name "catch_clause");
       Token (Name "assign_lambda");
+      Token (Name "object_pattern");
     |];
   );
   "semgrep_expression",
@@ -12271,6 +12272,10 @@ let trans_semgrep_pattern ((kind, body) : mt) : CST.semgrep_pattern =
       | Alt (6, v) ->
           `Assign_lambda (
             trans_assign_lambda (Run.matcher_token v)
+          )
+      | Alt (7, v) ->
+          `Obj_pat (
+            trans_object_pattern (Run.matcher_token v)
           )
       | _ -> assert false
       )
