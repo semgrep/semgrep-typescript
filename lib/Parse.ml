@@ -1246,6 +1246,7 @@ let children_regexps : (string * Run.exp option) list = [
           Alt [|
             Token (Name "property_name");
             Token (Name "enum_assignment");
+            Token (Name "semgrep_ellipsis");
           |];
           Repeat (
             Seq [
@@ -1253,6 +1254,7 @@ let children_regexps : (string * Run.exp option) list = [
               Alt [|
                 Token (Name "property_name");
                 Token (Name "enum_assignment");
+                Token (Name "semgrep_ellipsis");
               |];
             ];
           );
@@ -2349,6 +2351,7 @@ let children_regexps : (string * Run.exp option) list = [
             Token (Name "construct_signature");
             Token (Name "index_signature");
             Token (Name "method_signature");
+            Token (Name "semgrep_ellipsis");
           |];
           Repeat (
             Seq [
@@ -2366,6 +2369,7 @@ let children_regexps : (string * Run.exp option) list = [
                 Token (Name "construct_signature");
                 Token (Name "index_signature");
                 Token (Name "method_signature");
+                Token (Name "semgrep_ellipsis");
               |];
             ];
           );
@@ -2613,26 +2617,31 @@ let children_regexps : (string * Run.exp option) list = [
   "primary_type",
   Some (
     Alt [|
-      Token (Name "parenthesized_type");
-      Token (Name "predefined_type");
-      Token (Name "identifier");
-      Token (Name "nested_type_identifier");
-      Token (Name "generic_type");
-      Token (Name "object_type");
-      Token (Name "array_type");
-      Token (Name "tuple_type");
-      Token (Name "flow_maybe_type");
-      Token (Name "type_query");
-      Token (Name "index_type_query");
-      Token (Name "this");
-      Token (Name "existential_type");
-      Token (Name "literal_type");
-      Token (Name "lookup_type");
-      Token (Name "conditional_type");
-      Token (Name "template_literal_type");
-      Token (Name "intersection_type");
-      Token (Name "union_type");
-      Token (Literal "const");
+      Alt [|
+        Token (Name "parenthesized_type");
+        Token (Name "predefined_type");
+        Token (Name "identifier");
+        Token (Name "nested_type_identifier");
+        Token (Name "generic_type");
+        Token (Name "object_type");
+        Token (Name "array_type");
+        Token (Name "tuple_type");
+        Token (Name "flow_maybe_type");
+        Token (Name "type_query");
+        Token (Name "index_type_query");
+        Token (Name "this");
+        Token (Name "existential_type");
+        Token (Name "literal_type");
+        Token (Name "lookup_type");
+        Token (Name "conditional_type");
+        Token (Name "template_literal_type");
+        Token (Name "intersection_type");
+        Token (Name "union_type");
+        Token (Literal "const");
+      |];
+      Token (Name "semgrep_ellipsis");
+      Token (Name "semgrep_metavariable");
+      Token (Name "semgrep_metavar_ellipsis");
     |];
   );
   "property_name",
@@ -3190,11 +3199,17 @@ let children_regexps : (string * Run.exp option) list = [
   Some (
     Seq [
       Token (Literal "<");
-      Token (Name "type_parameter");
+      Alt [|
+        Token (Name "type_parameter");
+        Token (Name "semgrep_ellipsis");
+      |];
       Repeat (
         Seq [
           Token (Literal ",");
-          Token (Name "type_parameter");
+          Alt [|
+            Token (Name "type_parameter");
+            Token (Name "semgrep_ellipsis");
+          |];
         ];
       );
       Opt (
@@ -3523,7 +3538,10 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "finally_clause");
       Token (Name "catch_clause");
       Token (Name "assign_lambda");
-      Token (Name "object_pattern");
+      Token (Name "decorator");
+      Token (Name "statement");
+      Token (Name "type");
+      Token (Name "type_predicate");
     |];
   );
   "semgrep_expression",
@@ -6537,6 +6555,10 @@ and trans_enum_body ((kind, body) : mt) : CST.enum_body =
                           `Enum_assign (
                             trans_enum_assignment (Run.matcher_token v)
                           )
+                      | Alt (2, v) ->
+                          `Semg_ellips (
+                            trans_semgrep_ellipsis (Run.matcher_token v)
+                          )
                       | _ -> assert false
                       )
                       ,
@@ -6554,6 +6576,10 @@ and trans_enum_body ((kind, body) : mt) : CST.enum_body =
                                 | Alt (1, v) ->
                                     `Enum_assign (
                                       trans_enum_assignment (Run.matcher_token v)
+                                    )
+                                | Alt (2, v) ->
+                                    `Semg_ellips (
+                                      trans_semgrep_ellipsis (Run.matcher_token v)
                                     )
                                 | _ -> assert false
                                 )
@@ -9375,6 +9401,10 @@ and trans_object_type ((kind, body) : mt) : CST.object_type =
                           `Meth_sign (
                             trans_method_signature (Run.matcher_token v)
                           )
+                      | Alt (6, v) ->
+                          `Semg_ellips (
+                            trans_semgrep_ellipsis (Run.matcher_token v)
+                          )
                       | _ -> assert false
                       )
                       ,
@@ -9429,6 +9459,10 @@ and trans_object_type ((kind, body) : mt) : CST.object_type =
                                 | Alt (5, v) ->
                                     `Meth_sign (
                                       trans_method_signature (Run.matcher_token v)
+                                    )
+                                | Alt (6, v) ->
+                                    `Semg_ellips (
+                                      trans_semgrep_ellipsis (Run.matcher_token v)
                                     )
                                 | _ -> assert false
                                 )
@@ -10111,84 +10145,102 @@ and trans_primary_type ((kind, body) : mt) : CST.primary_type =
   | Children v ->
       (match v with
       | Alt (0, v) ->
-          `Paren_type (
-            trans_parenthesized_type (Run.matcher_token v)
+          `Choice_paren_type (
+            (match v with
+            | Alt (0, v) ->
+                `Paren_type (
+                  trans_parenthesized_type (Run.matcher_token v)
+                )
+            | Alt (1, v) ->
+                `Pred_type (
+                  trans_predefined_type (Run.matcher_token v)
+                )
+            | Alt (2, v) ->
+                `Id (
+                  trans_identifier (Run.matcher_token v)
+                )
+            | Alt (3, v) ->
+                `Nested_type_id (
+                  trans_nested_type_identifier (Run.matcher_token v)
+                )
+            | Alt (4, v) ->
+                `Gene_type (
+                  trans_generic_type (Run.matcher_token v)
+                )
+            | Alt (5, v) ->
+                `Obj_type (
+                  trans_object_type (Run.matcher_token v)
+                )
+            | Alt (6, v) ->
+                `Array_type (
+                  trans_array_type (Run.matcher_token v)
+                )
+            | Alt (7, v) ->
+                `Tuple_type (
+                  trans_tuple_type (Run.matcher_token v)
+                )
+            | Alt (8, v) ->
+                `Flow_maybe_type (
+                  trans_flow_maybe_type (Run.matcher_token v)
+                )
+            | Alt (9, v) ->
+                `Type_query (
+                  trans_type_query (Run.matcher_token v)
+                )
+            | Alt (10, v) ->
+                `Index_type_query (
+                  trans_index_type_query (Run.matcher_token v)
+                )
+            | Alt (11, v) ->
+                `This (
+                  trans_this (Run.matcher_token v)
+                )
+            | Alt (12, v) ->
+                `Exis_type (
+                  trans_existential_type (Run.matcher_token v)
+                )
+            | Alt (13, v) ->
+                `Lit_type (
+                  trans_literal_type (Run.matcher_token v)
+                )
+            | Alt (14, v) ->
+                `Lookup_type (
+                  trans_lookup_type (Run.matcher_token v)
+                )
+            | Alt (15, v) ->
+                `Cond_type (
+                  trans_conditional_type (Run.matcher_token v)
+                )
+            | Alt (16, v) ->
+                `Temp_lit_type (
+                  trans_template_literal_type (Run.matcher_token v)
+                )
+            | Alt (17, v) ->
+                `Inte_type (
+                  trans_intersection_type (Run.matcher_token v)
+                )
+            | Alt (18, v) ->
+                `Union_type (
+                  trans_union_type (Run.matcher_token v)
+                )
+            | Alt (19, v) ->
+                `Const (
+                  Run.trans_token (Run.matcher_token v)
+                )
+            | _ -> assert false
+            )
           )
       | Alt (1, v) ->
-          `Pred_type (
-            trans_predefined_type (Run.matcher_token v)
+          `Semg_ellips (
+            trans_semgrep_ellipsis (Run.matcher_token v)
           )
       | Alt (2, v) ->
-          `Id (
-            trans_identifier (Run.matcher_token v)
+          `Semg_meta (
+            trans_semgrep_metavariable (Run.matcher_token v)
           )
       | Alt (3, v) ->
-          `Nested_type_id (
-            trans_nested_type_identifier (Run.matcher_token v)
-          )
-      | Alt (4, v) ->
-          `Gene_type (
-            trans_generic_type (Run.matcher_token v)
-          )
-      | Alt (5, v) ->
-          `Obj_type (
-            trans_object_type (Run.matcher_token v)
-          )
-      | Alt (6, v) ->
-          `Array_type (
-            trans_array_type (Run.matcher_token v)
-          )
-      | Alt (7, v) ->
-          `Tuple_type (
-            trans_tuple_type (Run.matcher_token v)
-          )
-      | Alt (8, v) ->
-          `Flow_maybe_type (
-            trans_flow_maybe_type (Run.matcher_token v)
-          )
-      | Alt (9, v) ->
-          `Type_query (
-            trans_type_query (Run.matcher_token v)
-          )
-      | Alt (10, v) ->
-          `Index_type_query (
-            trans_index_type_query (Run.matcher_token v)
-          )
-      | Alt (11, v) ->
-          `This (
-            trans_this (Run.matcher_token v)
-          )
-      | Alt (12, v) ->
-          `Exis_type (
-            trans_existential_type (Run.matcher_token v)
-          )
-      | Alt (13, v) ->
-          `Lit_type (
-            trans_literal_type (Run.matcher_token v)
-          )
-      | Alt (14, v) ->
-          `Lookup_type (
-            trans_lookup_type (Run.matcher_token v)
-          )
-      | Alt (15, v) ->
-          `Cond_type (
-            trans_conditional_type (Run.matcher_token v)
-          )
-      | Alt (16, v) ->
-          `Temp_lit_type (
-            trans_template_literal_type (Run.matcher_token v)
-          )
-      | Alt (17, v) ->
-          `Inte_type (
-            trans_intersection_type (Run.matcher_token v)
-          )
-      | Alt (18, v) ->
-          `Union_type (
-            trans_union_type (Run.matcher_token v)
-          )
-      | Alt (19, v) ->
-          `Const (
-            Run.trans_token (Run.matcher_token v)
+          `Semg_meta_ellips (
+            trans_semgrep_metavar_ellipsis (Run.matcher_token v)
           )
       | _ -> assert false
       )
@@ -11471,14 +11523,35 @@ and trans_type_parameters ((kind, body) : mt) : CST.type_parameters =
       | Seq [v0; v1; v2; v3; v4] ->
           (
             Run.trans_token (Run.matcher_token v0),
-            trans_type_parameter (Run.matcher_token v1),
+            (match v1 with
+            | Alt (0, v) ->
+                `Type_param (
+                  trans_type_parameter (Run.matcher_token v)
+                )
+            | Alt (1, v) ->
+                `Semg_ellips (
+                  trans_semgrep_ellipsis (Run.matcher_token v)
+                )
+            | _ -> assert false
+            )
+            ,
             Run.repeat
               (fun v ->
                 (match v with
                 | Seq [v0; v1] ->
                     (
                       Run.trans_token (Run.matcher_token v0),
-                      trans_type_parameter (Run.matcher_token v1)
+                      (match v1 with
+                      | Alt (0, v) ->
+                          `Type_param (
+                            trans_type_parameter (Run.matcher_token v)
+                          )
+                      | Alt (1, v) ->
+                          `Semg_ellips (
+                            trans_semgrep_ellipsis (Run.matcher_token v)
+                          )
+                      | _ -> assert false
+                      )
                     )
                 | _ -> assert false
                 )
@@ -12274,8 +12347,20 @@ let trans_semgrep_pattern ((kind, body) : mt) : CST.semgrep_pattern =
             trans_assign_lambda (Run.matcher_token v)
           )
       | Alt (7, v) ->
-          `Obj_pat (
-            trans_object_pattern (Run.matcher_token v)
+          `Deco (
+            trans_decorator (Run.matcher_token v)
+          )
+      | Alt (8, v) ->
+          `Stmt (
+            trans_statement (Run.matcher_token v)
+          )
+      | Alt (9, v) ->
+          `Type (
+            trans_type_ (Run.matcher_token v)
+          )
+      | Alt (10, v) ->
+          `Type_pred (
+            trans_type_predicate (Run.matcher_token v)
           )
       | _ -> assert false
       )
